@@ -160,7 +160,34 @@ public class World extends JPanel {
         Element e2 = elements[secondRow][secondCol]; // 获取第二个选中元素
         elements[firstRow][firstCol] = e2; // 将第一个选中元素修改为第二个元素
         elements[secondRow][secondCol] = e1; // 将第二个选中的元素修改为第一个元素
+    }
 
+    /**
+     * 扫描并删除元素
+     * @return
+     */
+    public boolean eliminateElement(){
+        boolean haveEliminated = false; // 是否有元素被消除了
+
+        for (int row=ROWS-1;row>=0;row--){ // 扫描所有行（76543210）
+            for (int col=COLS-1;col>=0;col--){ // 扫描所有列（543210）
+               Element e = elements[row][col]; // 获取当前元素
+               if (e==null) continue; // 若元素为null，则跳过
+                // 1) 查找一行中连续的个数，查找一列中连续的个数
+                // 2) 将连续(可消除)的元素设计为可消除状态(因为要插入爆炸动画)
+                // 3) 将可消除状态的元素绘制爆炸动画
+                // 4) 将可消除状态元素设置为null，以等待其他元素的下落
+
+                // 1) 查找一行中连续的个数，查找一列中连续的个数
+                int colRepeat = 0; // 行不变，列相邻----与当前元素相邻的行元素的连续重复个数
+
+
+
+
+            }
+        }
+
+        return haveEliminated;
     }
 
     private boolean canInteractive = true; // 可交互状态(默认为true)
@@ -204,9 +231,10 @@ public class World extends JPanel {
                             public void run(){
                                 elements[firstRow][firstCol].setSelected(false);
                                 elements[secondRow][secondCol].setSelected(false);
-                                // 交换、消除
+                                // 消除
                                 moveElement();  // 移动两个元素(移动动画)
                                 exchangeElement(); // 交换两个元素
+                                eliminateElement(); // 扫描并消除元素
                                 canInteractive = true; // 可交互
 
 
