@@ -23,6 +23,11 @@ public abstract class Element {
         eliminatedIndex = 0;
     }
 
+    public int getY() {
+        return y;
+    }
+
+
     public void setX(int x) {
         this.x = x;
     }

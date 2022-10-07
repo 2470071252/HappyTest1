@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 import java.util.Random;
 
 public class World extends JPanel {
@@ -173,7 +174,9 @@ public class World extends JPanel {
         for (int row = ROWS - 1; row >= 0; row--) { // 扫描所有行（76543210）
             for (int col = COLS - 1; col >= 0; col--) { // 扫描所有列（543210）
                 Element e = elements[row][col]; // 获取当前元素
-                if (e == null) continue; // 若元素为null，则跳过
+                if (e == null){
+                    continue; // 若元素为null，则跳过
+                }
                 // 1) 查找一行中连续的个数，查找一列中连续的个数
                 // 2) 将连续(可消除)的元素设计为可消除状态(因为要插入爆炸动画)
                 // 3) 将可消除状态的元素绘制爆炸动画
@@ -182,41 +185,51 @@ public class World extends JPanel {
                 // 1) 查找一行中连续的个数，查找一列中连续的个数
                 int colRepeat = 0; // 行不变，列相邻----与当前行元素相邻的行元素的连续重复个数
                 for (int pc = col - 1; pc >= 0; pc--) {  // 倒着遍历当前元素中的所有列
-                    if (elements[row][pc] == null) break; // 若前面的元素为null则直接退出
+                    if (elements[row][pc] == null){
+                        break; // 若前面的元素为null则直接退出
+                    }
                     // 若遍历元素与当前元素相同，则重复个数加1，否则break推出
-                    if (elements[row][pc].getClass() == e.getClass())
+                    if (elements[row][pc].getClass() == e.getClass()){
                         colRepeat++;
-                    else break; // 只要有一个不同的，剩余的不再需要比较了
+                    }
+                    else{
+                        break; // 只要有一个不同的，剩余的不再需要比较了
+                    }
                 }
 
                 int rowRepeat = 0; // // 列不变，行相邻----与当前列元素相邻的行元素的连续重复个数
                 for (int pr = row - 1; pr >= 0; pr--) {
-                    if (elements[pr][col] == null) break;
-                    if (elements[pr][col].getClass() == e.getClass())
+                    if (elements[pr][col] == null){
+                        break;
+                    }
+                    if (elements[pr][col].getClass() == e.getClass()){
                         rowRepeat++;
-                    else break;
+                    }
+                    else{
+                        break;
+                    }
                 }
 
                 // 2) 将连续(可消除)的元素设计为可消除状态(因为要插入爆炸动画)
-                if (colRepeat>=2) {  // 行不变，列相邻，条件内表示列可消除
+                if (colRepeat >= 2) {  // 行不变，列相邻，条件内表示列可消除
                     elements[row][col].setEliminated(true);
-                    for (int i=1;i<=colRepeat;i++){ //遍历连续个数次
-                        elements[row][colRepeat-i].setEliminated(true); // 行不变，列前元素设置为可消除
+                    for (int i = 1; i <= colRepeat; i++) { //遍历连续个数次
+                        elements[row][col - i].setEliminated(true); // 行不变，列前元素设置为可消除
                     }
                 }
-                if (rowRepeat>=2) { // 列不变，行相邻，条件内表示行可消除
+                if (rowRepeat >= 2) { // 列不变，行相邻，条件内表示行可消除
                     elements[row][col].setEliminated(true);
-                    for (int i =1;i<=rowRepeat;i++){
-                        elements[row-i][col].setEliminated(true);
+                    for (int i = 1; i <= rowRepeat; i++) {
+                        elements[row - i][col].setEliminated(true);
                     }
                 }
 
                 // 3) 将可消除状态的元素绘制爆炸动画
-                if (colRepeat>=2||rowRepeat>=2){ // 如果有可消除元素
-                    for (int i =0;i<Images.bombs.length;i++){  // 遍历所有爆破图
+                if (colRepeat >= 2 || rowRepeat >= 2) { // 如果有可消除元素
+                    for (int i = 0; i < Images.bombs.length; i++) {  // 遍历所有爆破图
                         repaint(); // 重画，依次显示4张爆破图
                         try { // 每动一下休眠10ms
-                            Thread.sleep(50);
+                            Thread.sleep(30);
                         } catch (InterruptedException ex) {
                             ex.printStackTrace();
                         }
@@ -224,25 +237,83 @@ public class World extends JPanel {
                 }
 
                 // 4) 将可消除状态元素设置为null，以等待其他元素的下落
-                if (colRepeat>=2){  // 行不变，列相邻
+                if (colRepeat >= 2) {  // 行不变，列相邻
                     elements[row][col] = null;
-                    for (int i=1;i<colRepeat;i++){
-                        elements[row][col-i] = null;
+                    for (int i = 1; i <= colRepeat; i++) {
+                        elements[row][col - i] = null;
                     }
                     haveEliminated = true;
                 }
-                if (rowRepeat>=2){
+                if (rowRepeat >= 2) {
                     elements[row][col] = null;
-                    for (int j=1;j<rowRepeat;j++){
-                        elements[row-j][col] = null;
+                    for (int j = 1; j <= rowRepeat; j++) {
+                        elements[row - j][col] = null;
                     }
                     haveEliminated = true;
                 }
 
             }
         }
-
         return haveEliminated;
+    }
+
+    /**
+     * 下落元素
+     */
+    public void dropElement() {
+        for (int row = ROWS - 1; row >= 0; row--) { // 遍历所有行（从下往上）
+            // 只要有null元素就要将它上面的元素全部都落下来，当没有null元素了则结束当前操作
+            while (true) { // 自造死循环
+                int[] nullCols = {}; // 当前行为null的列号
+                // ……查找null列
+                for (int col = COLS - 1; col >= 0; col--) { // 遍历所有列
+                    Element e = elements[row][col];  // 获取当前元素
+                    if (e == null) { // 若当前列元素为null
+                        // 扩容
+                        nullCols = Arrays.copyOf(nullCols, nullCols.length + 1);
+                        nullCols[nullCols.length - 1] = col; // 将null元素的列号填充到最后一个元素上
+                    }
+                }
+
+                if (nullCols.length > 0) {  // 当前行有为null的列
+                    // ...移动下落元素，生成新的元素
+                    // 以4为步长，移动15次(大小正好是60)
+
+                    for (int count = 0; count < 15; count++) { // 播放15帧的动画
+                        // ... 向下落一下
+                        for (int i = 0; i < nullCols.length; i++) { // 所有null元素都要落
+                            int nc = nullCols[i];  // 获取null的列号
+                            for (int dr = row - 1; dr >= 0; dr--) { // 从当前行的上一行开始下落元素
+                                Element e = elements[dr][nc]; // 获取上方元素
+                                if (e != null) { // 若元素不是null
+                                    e.setY(e.getY() + 4); // 设置元素y坐标--本身y坐标+步长
+                                }
+                            }
+                        }
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        repaint(); // 重画
+                    }
+
+                    // 真正让数组上面的元素往下落
+                    for (int i = 0; i < nullCols.length; i++) { // 遍历所有的null列号
+                        int nc = nullCols[i]; // 获取当前null列号
+                        // 从当前行开始，一直到最上面(不包括0，因为第一行要生成新元素)，元素依次修改
+                        for (int nr = row; nr > 0; nr--) {
+                            elements[nr][nc] = elements[nr-1][nc]; // 将当前元素赋值为它上一行的
+                        }
+                        elements[0][nc] = createElement(0,nc);
+                    }
+
+
+                } else { // 当前行灭有null列，则break退出当前行处理，进行开始处理下一行
+                    break;
+                }
+            }
+        }
     }
 
     private boolean canInteractive = true; // 可交互状态(默认为true)
@@ -282,16 +353,33 @@ public class World extends JPanel {
                     secondCol = col; // 记录第2个元素col
                     elements[secondRow][secondCol].setSelected(true);
                     if (isAdjacent()) { // 若相邻
-                        new Thread(() -> {
-                            elements[firstRow][firstCol].setSelected(false);
-                            elements[secondRow][secondCol].setSelected(false);
-                            // 消除
-                            moveElement();  // 移动两个元素(移动动画)
-                            exchangeElement(); // 交换两个元素
-                            eliminateElement(); // 扫描并消除元素
-                            canInteractive = true; // 可交互
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                elements[firstRow][firstCol].setSelected(false);
+                                elements[secondRow][secondCol].setSelected(false);
+                                // 消除
+                                moveElement();  // 移动两个元素(移动动画)
+                                exchangeElement(); // 交换两个元素
+                                if (eliminateElement()) { // 若有可消并且消除了
+                                    // 下落新元素
+                                    do {
+                                        dropElement();
+                                        try { // 每动一下休眠10ms
+                                            Thread.sleep(10);
+                                        } catch (InterruptedException ex) {
+                                            ex.printStackTrace();
+                                        }
+                                    }while (eliminateElement()); // 扫描又可消元素就继续消除并且下落，若果没有则结束
+                                } else { // 没有可消，需要换回去
+                                    moveElement(); // 移动两个元素(移动动画)
+                                    exchangeElement(); // 交换两个元素
+                                }
+                                eliminateElement(); // 扫描并消除元素
+                                canInteractive = true; // 可交互
 
-                        }).start();
+                            }
+                        }.start();
 
                     } else {  // 不相邻
                         elements[firstRow][firstCol].setSelected(false);  // 取消选中状态
