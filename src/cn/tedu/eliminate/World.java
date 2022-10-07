@@ -114,37 +114,37 @@ public class World extends JPanel {
     /**
      * 移动两个元素
      */
-    public void moveElement(){
-        if (firstRow==secondRow){ // 若行号相同，表示左右动
-            int firstX = OFFSET+firstCol*ELEMENT_SIZE; // 第一个元素的x坐标
-            int secondX = OFFSET+secondCol*ELEMENT_SIZE; // 第二个元素的x坐标
-            int step = firstX<secondX?4:-4;  // 步长(控制左右)，值越大速度越快
-            for (int i=0 ;i<15;i++){ // 走15次（每次走4，共15*4为60）
-                try{ // 每动一下休眠10ms
+    public void moveElement() {
+        if (firstRow == secondRow) { // 若行号相同，表示左右动
+            int firstX = OFFSET + firstCol * ELEMENT_SIZE; // 第一个元素的x坐标
+            int secondX = OFFSET + secondCol * ELEMENT_SIZE; // 第二个元素的x坐标
+            int step = firstX < secondX ? 4 : -4;  // 步长(控制左右)，值越大速度越快
+            for (int i = 0; i < 15; i++) { // 走15次（每次走4，共15*4为60）
+                try { // 每动一下休眠10ms
                     Thread.sleep(10);
-                }catch (InterruptedException e){
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                firstX+=step; // firstX加
-                secondX-=step; // secondX减
+                firstX += step; // firstX加
+                secondX -= step; // secondX减
                 // 修改元素坐标（刚刚只是在修改变量的值，一定是元素坐标修改之后才能看到移动）
                 elements[firstRow][firstCol].setX(firstX);
                 elements[secondRow][secondCol].setX(secondX);
                 repaint();
             }
         }
-        if (firstCol==secondCol) { // 若列号相同表示上下动
-            int firstY = OFFSET+firstRow*ELEMENT_SIZE;
-            int secondY = OFFSET+secondRow*ELEMENT_SIZE;
-            int step = firstY<secondY?4:-4;
-            for (int i=0;i<15;i++){
+        if (firstCol == secondCol) { // 若列号相同表示上下动
+            int firstY = OFFSET + firstRow * ELEMENT_SIZE;
+            int secondY = OFFSET + secondRow * ELEMENT_SIZE;
+            int step = firstY < secondY ? 4 : -4;
+            for (int i = 0; i < 15; i++) {
                 try {
                     Thread.sleep(10);
-                }catch (InterruptedException e){
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                firstY+=step;
-                secondY-=step;
+                firstY += step;
+                secondY -= step;
                 elements[firstRow][firstCol].setY(firstY);
                 elements[secondRow][secondCol].setY(secondY);
                 repaint();
@@ -155,7 +155,7 @@ public class World extends JPanel {
     /**
      * 交换两个元素
      */
-    public void exchangeElement(){
+    public void exchangeElement() {
         Element e1 = elements[firstRow][firstCol]; // 获取第一个选中元素
         Element e2 = elements[secondRow][secondCol]; // 获取第二个选中元素
         elements[firstRow][firstCol] = e2; // 将第一个选中元素修改为第二个元素
@@ -164,15 +164,16 @@ public class World extends JPanel {
 
     /**
      * 扫描并删除元素
+     *
      * @return
      */
-    public boolean eliminateElement(){
+    public boolean eliminateElement() {
         boolean haveEliminated = false; // 是否有元素被消除了
 
-        for (int row=ROWS-1;row>=0;row--){ // 扫描所有行（76543210）
-            for (int col=COLS-1;col>=0;col--){ // 扫描所有列（543210）
-               Element e = elements[row][col]; // 获取当前元素
-               if (e==null) continue; // 若元素为null，则跳过
+        for (int row = ROWS - 1; row >= 0; row--) { // 扫描所有行（76543210）
+            for (int col = COLS - 1; col >= 0; col--) { // 扫描所有列（543210）
+                Element e = elements[row][col]; // 获取当前元素
+                if (e == null) continue; // 若元素为null，则跳过
                 // 1) 查找一行中连续的个数，查找一列中连续的个数
                 // 2) 将连续(可消除)的元素设计为可消除状态(因为要插入爆炸动画)
                 // 3) 将可消除状态的元素绘制爆炸动画
@@ -180,20 +181,62 @@ public class World extends JPanel {
 
                 // 1) 查找一行中连续的个数，查找一列中连续的个数
                 int colRepeat = 0; // 行不变，列相邻----与当前行元素相邻的行元素的连续重复个数
-                for (int pc = col-1;pc>=0;pc--){  // 倒着遍历当前元素中的所有列
-                    if (elements[row][pc]==null) break; // 若前面的元素为null则直接退出
+                for (int pc = col - 1; pc >= 0; pc--) {  // 倒着遍历当前元素中的所有列
+                    if (elements[row][pc] == null) break; // 若前面的元素为null则直接退出
                     // 若遍历元素与当前元素相同，则重复个数加1，否则break推出
-                    if (elements[row][pc].getClass()==e.getClass()){
+                    if (elements[row][pc].getClass() == e.getClass())
                         colRepeat++;
-                    }else break; // 只要有一个不同的，剩余的不再需要比较了
+                    else break; // 只要有一个不同的，剩余的不再需要比较了
                 }
 
                 int rowRepeat = 0; // // 列不变，行相邻----与当前列元素相邻的行元素的连续重复个数
-                for (int pc = row-1;pc>=0;pc--){
-                    if (elements[pc][col] == null) break;
-                    if (elements[pc][col].getClass()==e.getClass()){
+                for (int pr = row - 1; pr >= 0; pr--) {
+                    if (elements[pr][col] == null) break;
+                    if (elements[pr][col].getClass() == e.getClass())
                         rowRepeat++;
-                    }else break;
+                    else break;
+                }
+
+                // 2) 将连续(可消除)的元素设计为可消除状态(因为要插入爆炸动画)
+                if (colRepeat>=2) {  // 行不变，列相邻，条件内表示列可消除
+                    elements[row][col].setEliminated(true);
+                    for (int i=1;i<=colRepeat;i++){ //遍历连续个数次
+                        elements[row][colRepeat-i].setEliminated(true); // 行不变，列前元素设置为可消除
+                    }
+                }
+                if (rowRepeat>=2) { // 列不变，行相邻，条件内表示行可消除
+                    elements[row][col].setEliminated(true);
+                    for (int i =1;i<=rowRepeat;i++){
+                        elements[row-i][col].setEliminated(true);
+                    }
+                }
+
+                // 3) 将可消除状态的元素绘制爆炸动画
+                if (colRepeat>=2||rowRepeat>=2){ // 如果有可消除元素
+                    for (int i =0;i<Images.bombs.length;i++){  // 遍历所有爆破图
+                        repaint(); // 重画，依次显示4张爆破图
+                        try { // 每动一下休眠10ms
+                            Thread.sleep(50);
+                        } catch (InterruptedException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+
+                // 4) 将可消除状态元素设置为null，以等待其他元素的下落
+                if (colRepeat>=2){  // 行不变，列相邻
+                    elements[row][col] = null;
+                    for (int i=1;i<colRepeat;i++){
+                        elements[row][col-i] = null;
+                    }
+                    haveEliminated = true;
+                }
+                if (rowRepeat>=2){
+                    elements[row][col] = null;
+                    for (int j=1;j<rowRepeat;j++){
+                        elements[row-j][col] = null;
+                    }
+                    haveEliminated = true;
                 }
 
             }
@@ -238,7 +281,7 @@ public class World extends JPanel {
                     secondRow = row; // 记录第2个元素row
                     secondCol = col; // 记录第2个元素col
                     elements[secondRow][secondCol].setSelected(true);
-                    if (isAdjacent()){ // 若相邻
+                    if (isAdjacent()) { // 若相邻
                         new Thread(() -> {
                             elements[firstRow][firstCol].setSelected(false);
                             elements[secondRow][secondCol].setSelected(false);
@@ -250,7 +293,7 @@ public class World extends JPanel {
 
                         }).start();
 
-                    }else {  // 不相邻
+                    } else {  // 不相邻
                         elements[firstRow][firstCol].setSelected(false);  // 取消选中状态
                         elements[secondRow][secondCol].setSelected(false); // 取消选中状态
                         canInteractive = true;
