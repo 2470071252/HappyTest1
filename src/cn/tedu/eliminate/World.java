@@ -179,10 +179,22 @@ public class World extends JPanel {
                 // 4) 将可消除状态元素设置为null，以等待其他元素的下落
 
                 // 1) 查找一行中连续的个数，查找一列中连续的个数
-                int colRepeat = 0; // 行不变，列相邻----与当前元素相邻的行元素的连续重复个数
+                int colRepeat = 0; // 行不变，列相邻----与当前行元素相邻的行元素的连续重复个数
+                for (int pc = col-1;pc>=0;pc--){  // 倒着遍历当前元素中的所有列
+                    if (elements[row][pc]==null) break; // 若前面的元素为null则直接退出
+                    // 若遍历元素与当前元素相同，则重复个数加1，否则break推出
+                    if (elements[row][pc].getClass()==e.getClass()){
+                        colRepeat++;
+                    }else break; // 只要有一个不同的，剩余的不再需要比较了
+                }
 
-
-
+                int rowRepeat = 0; // // 列不变，行相邻----与当前列元素相邻的行元素的连续重复个数
+                for (int pc = row-1;pc>=0;pc--){
+                    if (elements[pc][col] == null) break;
+                    if (elements[pc][col].getClass()==e.getClass()){
+                        rowRepeat++;
+                    }else break;
+                }
 
             }
         }
@@ -227,19 +239,16 @@ public class World extends JPanel {
                     secondCol = col; // 记录第2个元素col
                     elements[secondRow][secondCol].setSelected(true);
                     if (isAdjacent()){ // 若相邻
-                        new Thread(){
-                            public void run(){
-                                elements[firstRow][firstCol].setSelected(false);
-                                elements[secondRow][secondCol].setSelected(false);
-                                // 消除
-                                moveElement();  // 移动两个元素(移动动画)
-                                exchangeElement(); // 交换两个元素
-                                eliminateElement(); // 扫描并消除元素
-                                canInteractive = true; // 可交互
+                        new Thread(() -> {
+                            elements[firstRow][firstCol].setSelected(false);
+                            elements[secondRow][secondCol].setSelected(false);
+                            // 消除
+                            moveElement();  // 移动两个元素(移动动画)
+                            exchangeElement(); // 交换两个元素
+                            eliminateElement(); // 扫描并消除元素
+                            canInteractive = true; // 可交互
 
-
-                            }
-                        }.start();
+                        }).start();
 
                     }else {  // 不相邻
                         elements[firstRow][firstCol].setSelected(false);  // 取消选中状态
